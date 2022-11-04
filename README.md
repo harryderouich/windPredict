@@ -107,13 +107,43 @@ My web scraper continues to run and build up data. As of 1st November 2022 I hav
 
 ### Single Day and Testing of Hypothesis
 
-The first step was to look at an individual dimension. Take a single date and explore how the 
+The first step was to look at an individual dimension. Take a single date and explore how the wind speed trended, if at all, in the fortnightly forecast.
 
+Choosing an arbitrary date, 30th July 2022, I began work writing `initial_data_analysis.py` to explore my findings. It was my first time using the `numpy`, `pandas` and `matplotlib` libraries in a real world scenario.
 
+The program begins by loading the scraped JSON data into a DataFrame and does some minor cleanup work. 
 
+Then, after the constant of the date to be analysed is set, some structure related elements are built; a dictionary to take the single date's data, and a list of hours for mapping later.
 
+We then iterate through the DataFrame and populate the empty Dictionary template, so it's in a more familiar format to work with.
+
+Next, we start to build our figure and subplots for each hour's trend to be laid out on. During this loop, the `x` and `y` values are plotted, axis labels set and a polynomial calculated for the trend line.
+
+### Results
+<img src="https://i.imgur.com/mjOnJw4.png" width="800" alt="graph of wind speed for 2022-07-30, CB25 area"><br />
+*Figure 1: Graph of Wind Forecast Speed for 30th July 2022* [Full Size](https://i.imgur.com/mjOnJw4.png)
+
+A conclusion made ever more clear by the trend line is that, universally, the wind speed trended downwards in the time leading up to the chosen date.
+
+To rule out a coincidence, I repeated this for the dates around 1 and 2 weeks ahead of the first date.
+
+<img src="https://i.imgur.com/BPKum5Q.png" width="800" alt="graph of wind speed for 2022-08-07, CB25 area"><br />
+*Figure 2: Graph of Wind Forecast Speed for 7th August 2022* [Full Size](https://i.imgur.com/BPKum5Q.png)
+
+<img src="https://i.imgur.com/0ZjuKqF.png" width="800" alt="graph of wind speed for 2022-08-07, CB25 area"><br />
+*Figure 3: Graph of Wind Forecast Speed for 14th August 2022* [Full Size](https://i.imgur.com/0ZjuKqF.png)
+
+The same trend appeared. This validated me continuing the investigation. I'd now test for my theory against a larger portion of the dataset, or the entire thing if possible. 
+
+My first intuition was to calculate a numerical representation of the trend line, to either:
+- Average out over the whole day to test overall daily variance. For example, to broadly predict how much an entire day's wind speed will likely vary.
+- Stored the numerical variance of how each hour trended, essentially averaging out the 13 days of captured speed for a given hour on a single day, to compare average variance for a given hour across the entire data set. For example, to look at how the 6AM wind forecast varies compared to the 6PM wind forecast.
+
+I wasn't sure at this stage what format I'd be needing this value to turn it into a prediction model. Storing absolute values, such as the minimum, maximum or range, or a percentage change over time initially seemed the most intuitive way to look at the trend. But at the same time I was considering something more algebraic to enable a more usable input in calculating the rate of change.
+
+# ""
 #Plan/notes
-# Create a line graph of the most recent day (ID 1)  with the min-max shown as error bars/alpha-ed area.
+Create a line graph of the most recent day (ID 1)  with the min-max shown as error bars/alpha-ed area.
 Amount of coloured area is more variance
 
 Then a way to spot the trend. E.g. Line graph of each hour (already done)
