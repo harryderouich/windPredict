@@ -141,11 +141,69 @@ My first intuition was to calculate a numerical representation of the trend line
 
 I wasn't sure at this stage what format I'd be needing this value to turn it into a prediction model. Storing absolute values, such as the minimum, maximum or range, or a percentage change over time initially seemed the most intuitive way to look at the trend. But at the same time I was considering something more algebraic to enable a more usable input in calculating the rate of change.
 
-# ""
-#Plan/notes
-Create a line graph of the most recent day (ID 1)  with the min-max shown as error bars/alpha-ed area.
-Amount of coloured area is more variance
+### Multi Day Analysis
+To improve the robustness of any future readings I decided to look at analysing a larger portion of the data available, which had now exceeded 100 dates.
 
-Then a way to spot the trend. E.g. Line graph of each hour (already done)
+I had decided on a set of scatter graphs (one for each hour) similar to the per hour line graphs at the previous stage. Functioning similar to a line graph (visually; allowing for a trend line to indicate a rough "direction"), but allowing me to hopefully spot correlation (i.e. the same pattern) over an array of dates.
 
-Then to compare many dates, do scatter graphs instead of the per hour line graph (or something for the entire day? e.g. plot the variance somehow)
+I refactored the code in `initial_data_analysis.py` into functions so that I could reuse elements to serve multiple purposes. At the same time ensuring the functions had been type hinted, so I could keep track of their parameters and what they returned.
+
+For instance, the `template_creation()` function came in use when creating all current and future graphs, as well as being used within `template_creation_multi_date()`.
+
+Although at this point there became a need for a comparative value that would allow for evaluation of wind speed _deviation_, not just wind speed. Otherwise, it would result in analysis of the wind speed itself, rather than the accuracy of future forecasts. 
+
+To quickly recap on the data hierarchy, we had:
+```angular2html
+1. Date (yyyy-mm-dd)
+    2. Day from date (13 to 1)
+        3. Hour (06 to 05)
+            4. Wind speed (integer, mph)
+```
+
+For my scatter graph, I had a subplot for each Hour. So we started by iterating over the list of hours (06 to 05) so that each one could be computed and plotted, before moving on to the next one. 
+
+Having then targeted an hour (e.g. 06/6am), we iterated over the `multi_day_dict` to single out one Date (e.g 2022-07-29).
+
+Each hour (06) had an array of 13 values to average out. So we took the speed from day 1, as this was the closest, and therefore most accurate, reading to the actual date, letting it be the `end_speed`. Then for each of the 13 values we calculated the difference to `end_speed`.
+
+For example, if `end_speed` is `10 (mph)` and `Day: 13, Hour: 06` is `8`, the difference stored would be `2`. By plotting each date's difference, for day 13-1, for each hour, we'd hopefully be able to spot a trend.
+
+An initial run of the data with 3 consequent dates was promising. Line at +/- 0 for clarity.
+
+<img src="https://i.imgur.com/aVzYdxh.png" width="800" alt="graph of wind speed for 2022-07-29 + 2 days, CB25 area"><br />
+*Figure 4: Graph of Wind Forecast Speed for 29th July 2022 + 2 Days* [Full Size](https://i.imgur.com/0ZjuKqF.png)
+
+Although, when running with more data (100 days), we hit our first hurdle.
+
+<img src="https://i.imgur.com/0i4CLvS.png" width="800" alt="graph of wind speed for 2022-07-29 + 99 days, CB25 area"><br />
+*Figure 5: Graph of Wind Forecast Speed for 29th July 2022 + 99 Days* [Full Size](https://i.imgur.com/0i4CLvS.png)
+
+No correlation at all. Which, whilst validating the lack of robustness on the initial model, made our task of finding a conclusion a bit more tricky. The sheer volume of data, both sides of our +/- 0 line made it impossible to visually determine a trend. Potentially paving the way for project to become inconclusive.
+
+### Taking a step back
+
+So it was back to the drawing board. I decided to lean into what was the shortfall of the previous evaluation (volume of data) and play into its strengths: analyse density and frequency.
+
+To avoid getting carried away, I retracted from looking at each hour individually and instead looking at entire days. My thought process being that any slight nuance spotted hour-to-hour could be looked at in a second phase, after we are put on the right tracks by a more broad trend. 
+
+I settled on creating a histogram, due to its ability to show frequency distribution. `histo_chart()` performed similar computations to `scatter_graph()`, with the difference to actual wind speed being calculated, but with averages being taken at the hour, day and date stages. The resulting date average being what summarised the overall distribution for a given day.
+
+For instance, the 6am data points (days 13 to 1) could be `[1, 2, -2, 1...]`, averaging to say, `0.5`. 
+
+Then the average of all hours (06 to 05), e.g. `[0.5, 1, -0.75...]`, could average to say, `0.63`, forming the average for that date.
+
+The resulting array could then be plotted into a histogram, in this case for 100 days. Importing the `scipy` library allowed for plotting of line of best fit. Divider at +/- 0 for clarity.
+
+<img src="https://i.imgur.com/guP9n8L.png" width="800" alt="graph of wind speed for 2022-07-29 + 100 days, CB25 area"><br />
+*Figure 6: Graph of Wind Forecast Speed for 29th July 2022 + 100 Days* [Full Size]()
+
+Note, that I took an average of the 100 date averages, which was `0.019`, in other words, each day fluctuated approx. 0.02mph from what was initially predicted vs. what actually happened. Likening to our lack of overall trend or correlation seen before. 
+
+But as shown by the histogram in Figure 6 above, instead looking at the distribution of date averages, we can begin to draw some more conclusions. 
+
+- The modal class can be seen as `0 < x < 1`, indicating that on average, the wind speed is over-predicted on a given day.
+- We can also see a wider range for the values <0, extending to as much as -4. This suggests that under-predictions typically a higher margin of error than over-predictions.
+
+As we have now seen that the shape of the data gives us opportunities to spot a pattern, I will look to create a histogram for the average of each hour (06-05). This will perhaps allow me to spot a pattern that a number of hours have in common, or how some hours lead on to other hours. Remembering the purpose of the project, being to analyse wind speed for cycling, a conclusion on a more practical set of hours (e.g. daylight hours) would be an acceptable and successful outcome. 
+
+*To be continued*
