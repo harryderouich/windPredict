@@ -21,16 +21,20 @@ def template_creation(df: pd.DataFrame, analysis_date: str) -> tuple[dict, list[
 
     # Create "Single Date" Dictionary with empty lists for each hour
     per_hour_dict = {analysis_date: {
-        "06": [], "07": [], "08": [], "09": [], "10": [], "11": [], "12": [], "13": [], "14": [], "15": [], "16": [], "17": [], "18": [], "19": [], "20": [], "21": [], "22": [], "23": [], "00": [], "01": [], "02": [], "03": [], "04": [], "05": []
-        }
+        "06": [], "07": [], "08": [], "09": [], "10": [], "11": [], "12": [], "13": [], "14": [], "15": [], "16": [],
+        "17": [], "18": [], "19": [], "20": [], "21": [], "22": [], "23": [], "00": [], "01": [], "02": [], "03": [],
+        "04": [], "05": []
+    }
     }
 
     # Ordered hour sequence for data values to be paired with
-    hour_sequence = ["06", "07", "08", "09", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "00", "01", "02", "03", "04", "05"]
+    hour_sequence = ["06", "07", "08", "09", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21",
+                     "22", "23", "00", "01", "02", "03", "04", "05"]
 
     # Loop each column (days) and build structure
     for day in range(len(df.columns)):
-        a_date = pd.DataFrame({"hour": one_date[day + 1].values[0].keys(), "speed": one_date[day + 1].values[0].values()})
+        a_date = pd.DataFrame(
+            {"hour": one_date[day + 1].values[0].keys(), "speed": one_date[day + 1].values[0].values()})
         speed = a_date.speed.values.tolist()
         for index, hour in enumerate(per_hour_dict[analysis_date].keys()):
             per_hour_dict[analysis_date][hour].append(speed[index])
@@ -44,7 +48,7 @@ def template_creation_multi_date(df: pd.DataFrame, analysis_date: str, num_days:
     starting_index = df.index.get_loc(analysis_date)
 
     # Select range containing start date plus specified number of subsequent dates
-    full_dates = df.axes[0].tolist()[starting_index:starting_index+num_days]
+    full_dates = df.axes[0].tolist()[starting_index:starting_index + num_days]
 
     # Empty list to add each single date dict in to
     month_list = []
@@ -85,7 +89,8 @@ def single_day_line_graphs(hours_list: list[str], time_dict: dict, analysis_date
         ax.plot(x_values, poly(x_values), "r--")  # Plot trend line
 
     # Add main title and show graph
-    fig.suptitle(f"Trends in Wind Forecast Speed (hourly)\n{analysis_date}\nCB25 0 Area", va="baseline", fontsize="30", y=0.9)
+    fig.suptitle(f"Trends in Wind Forecast Speed (hourly)\n{analysis_date}\nCB25 0 Area", va="baseline", fontsize="30",
+                 y=0.9)
     plt.show()
 
 
@@ -206,14 +211,75 @@ def histo_chart(hours_list: list[str], multi_date_dict: list, start_date: str):
 
     # Set x ticks and labels
     plt.xticks(np.arange(-4, 4.5, step=1))
-    plt.xlabel("Average Wind Speed Variation +/– mph\nAbove 0 - Date was over-predicted\nBelow 0 - Date was under-predicted", fontsize=20)
+    plt.xlabel(
+        "Average Wind Speed Variation +/– mph\nAbove 0 - Date was over-predicted\nBelow 0 - Date was under-predicted",
+        fontsize=20)
     plt.ylabel("Number of dates", fontsize=20)
-    plt.suptitle(f"Average Wind Speed Variation - {date_to_analyse} + {len(multi_date_dict)} Days\nCB25 0 Area", va="baseline", fontsize="30",
+    plt.suptitle(f"Average Wind Speed Variation - {start_date} + {len(multi_date_dict)} Days\nCB25 0 Area",
+                 va="baseline", fontsize="30",
                  y=0.9)
 
     # Set divider line at 0
     plt.axvline(0, linewidth=3, color="red", linestyle="dashed")
     plt.grid(visible=True)
+
+    plt.show()
+
+
+def multi_histo_chart(hours_list: list[str], multi_date_dict: list):
+    # Create subplots
+    fig, axs = plt.subplots(nrows=8, ncols=3, figsize=(20, 20))
+    plt.subplots_adjust(hspace=1)
+
+    # Iterate through hours/subplots
+    for hour_sing, ax in zip(hours_list, axs.ravel()):
+        avg_of_dates = []
+
+        # Iterate through each date (plotting once for every date on each subplot)
+        for date in multi_date_dict:
+
+            # Unpack each hour iterable
+            entire_hours = [*date.values()]
+
+            # Empty list for each hour's average
+            day_hour_avg = []
+
+            # Loop each hour
+            for hour in hours_list:
+                # Calculate difference to end speed
+                end_speed = entire_hours[0][hour][-1]
+
+                # Empty list to store each hour's difference to end speed
+                speed_diff = []
+                for each in entire_hours[0][hour]:
+                    speed_diff.append(end_speed - each)
+
+                # Average the variance for the given hour
+                hour_avg = sum(speed_diff) / len(speed_diff)
+                day_hour_avg.append(hour_avg)
+
+            # Average of all hours and store resulting date's average
+            date_avg = sum(day_hour_avg) / len(day_hour_avg)
+            avg_of_dates.append(date_avg)
+
+        # Histogram
+        # Plot histogram with symmetrical bins
+        ax.hist(avg_of_dates, bins=np.arange(-4, 5, step=1))
+
+        # Set x ticks and labels
+        ax.set_xticks(np.arange(-4, 4.5, step=1))
+        ax.set(
+            xlabel="Average Wind Speed Variation +/– mph",
+            ylabel="Number of dates"
+            )
+
+        # Line of symmetry & grid
+        ax.axvline(0, linewidth=3, color="red", linestyle="dashed")
+        ax.grid(visible=True)
+
+    # Add main figure title
+    fig.suptitle(f"Trends in Wind Forecast Speed (hourly)\nCB25 0 Area\nAbove 0 - Date was over-predicted\nBelow 0 - Date was under-predicted", va="baseline", fontsize="30",
+                 y=0.9)
 
     plt.show()
 
@@ -230,4 +296,5 @@ multi_day = template_creation_multi_date(wind_df, date_to_analyse, 100)
 # line_graph(over_time, date_to_analyse, hours)
 # single_day_line_graphs(hours, over_time, date_to_analyse)
 # scatter_graph(hours, multi_day)
-histo_chart(hours, multi_day, date_to_analyse)
+# histo_chart(hours, multi_day, date_to_analyse)
+multi_histo_chart(hours, multi_day)
