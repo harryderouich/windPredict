@@ -206,4 +206,15 @@ But as shown by the histogram in Figure 6 above, instead looking at the distribu
 
 As we have now seen that the shape of the data gives us opportunities to spot a pattern, I will look to create a histogram for the average of each hour (06-05). This will perhaps allow me to spot a pattern that a number of hours have in common, or how some hours lead on to other hours. Remembering the purpose of the project, being to analyse wind speed for cycling, a conclusion on a more practical set of hours (e.g. daylight hours) would be an acceptable and successful outcome. 
 
+After the creation of two new histogram related functions, we were presented with the graphs below, grid purposely omitted: 
+
+<img src="https://i.imgur.com/BbEpFaJ.png" width="800" alt="100 day single-hour histogram summary, CB25 area"><br />
+*Figure 7: Per-hour histograms summarising 100 days of variance* [Full Size](https://i.imgur.com/BbEpFaJ.png)
+
+I opted against showing a grid, so I could better evaluate the *shape* of the data, as it was the first time looking at data in this dimension and I wanted to be able to make a general conclusion at this stage. I was grateful to see that there was a noticeable difference between at least a few of the hours. This indicated that there would be more to investigate here, but that I had perhaps reached the limit of evaluating just the shape of the data. 
+
+Being that we were now looking for slight nuance in the results, rather than sweeping assumptions, a mathematical representation of the hours and their relationship to one another would likely be required. 
+
+But at the same time, I thought it would be a good idea to wait for more data to be collected, on the chance it made the differences between the hours more drastic (and noticeable visually). 
+
 *To be continued*

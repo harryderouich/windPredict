@@ -43,7 +43,7 @@ def template_creation(df: pd.DataFrame, analysis_date: str) -> tuple[dict, list[
 
 
 # Done
-def template_creation_multi_date(df: pd.DataFrame, analysis_date: str, num_days: int) -> list:
+def template_creation_multi_date(df: pd.DataFrame, analysis_date: str, num_days: int) -> list[dict]:
     # Get index of provided analysis date (forms the start of the range)
     starting_index = df.index.get_loc(analysis_date)
 
@@ -171,6 +171,7 @@ def scatter_graph(hours_list: list[str], multi_date_dict: list):
     plt.show()
 
 
+# Done
 def histo_chart(hours_list: list[str], multi_date_dict: list, start_date: str):
     # Empty list to store each date's average variance
     avg_of_dates = []
@@ -226,66 +227,64 @@ def histo_chart(hours_list: list[str], multi_date_dict: list, start_date: str):
     plt.show()
 
 
-def multi_histo_chart(hours_list: list[str], multi_date_dict: list):
+# Done
+def single_hour_histo_calc(multi_date_dict: list, single_hour: str) -> list[float]:
+
+    single_hour_date_avg = []
+
+    # Iterate through each date
+    for date in multi_date_dict:
+        single_hour_single_date = []
+        # Unpack each hour iterable
+        entire_hours = [*date.values()]
+
+        # For the single hour:
+        # Calculate difference to end speed
+        end_speed = entire_hours[0][single_hour][-1]
+
+        # Append the difference to the single hour diff list
+        for each in entire_hours[0][single_hour]:
+            single_hour_single_date.append(end_speed - each)
+
+        # Average of the single hour and store that date's average
+        date_avg = sum(single_hour_single_date) / len(single_hour_single_date)
+        single_hour_date_avg.append(date_avg)
+
+    return single_hour_date_avg
+
+
+# Done
+def per_hour_histo_chart(multi_date_dict: list, hours_list: list):
     # Create subplots
     fig, axs = plt.subplots(nrows=8, ncols=3, figsize=(20, 20))
     plt.subplots_adjust(hspace=1)
 
     # Iterate through hours/subplots
     for hour_sing, ax in zip(hours_list, axs.ravel()):
-        avg_of_dates = []
+        # Calculate the hour histo data
+        single_hour_histo_data = single_hour_histo_calc(multi_date_dict, hour_sing)
+        # Plot histo data
+        ax.hist(single_hour_histo_data, bins=np.arange(-4, 5, step=1))
 
-        # Iterate through each date (plotting once for every date on each subplot)
-        for date in multi_date_dict:
+        # Axes, Labels and Title
+        ax.set(xlabel="Avg. Wind Speed Variation +/- mph", ylabel="Number of dates")
+        ax.set_yticks(np.arange(0, 45, step=10))
+        ax.set_title(hour_sing)
 
-            # Unpack each hour iterable
-            entire_hours = [*date.values()]
+        # Divider/grid
+        ax.axvline(0, linewidth=2, color="red", linestyle="dashed")
 
-            # Empty list for each hour's average
-            day_hour_avg = []
-
-            # Loop each hour
-            for hour in hours_list:
-                # Calculate difference to end speed
-                end_speed = entire_hours[0][hour][-1]
-
-                # Empty list to store each hour's difference to end speed
-                speed_diff = []
-                for each in entire_hours[0][hour]:
-                    speed_diff.append(end_speed - each)
-
-                # Average the variance for the given hour
-                hour_avg = sum(speed_diff) / len(speed_diff)
-                day_hour_avg.append(hour_avg)
-
-            # Average of all hours and store resulting date's average
-            date_avg = sum(day_hour_avg) / len(day_hour_avg)
-            avg_of_dates.append(date_avg)
-
-        # Histogram
-        # Plot histogram with symmetrical bins
-        ax.hist(avg_of_dates, bins=np.arange(-4, 5, step=1))
-
-        # Set x ticks and labels
-        ax.set_xticks(np.arange(-4, 4.5, step=1))
-        ax.set(
-            xlabel="Average Wind Speed Variation +/– mph",
-            ylabel="Number of dates"
-            )
-
-        # Line of symmetry & grid
-        ax.axvline(0, linewidth=3, color="red", linestyle="dashed")
-        ax.grid(visible=True)
-
-    # Add main figure title
-    fig.suptitle(f"Trends in Wind Forecast Speed (hourly)\nCB25 0 Area\nAbove 0 - Date was over-predicted\nBelow 0 - Date was under-predicted", va="baseline", fontsize="30",
-                 y=0.9)
-
+    # Main Figure Title/Label
+    fig.suptitle(f"Trends in Wind Forecast Speed (hourly)\n{len(multi_date_dict)} Day Summary\nCB25 0 Area",
+                 va="baseline", fontsize="30", y=0.9)
+    fig.supxlabel("Above 0 - Hour & date were over-predicted\nBelow 0 - Hour & date were under-predicted",
+                  y="0.03", fontsize="20")
     plt.show()
 
 
-# Set date to analyse here:
+# Set date to analyse here (for single date graphs only):
 date_to_analyse = '2022-07-29'
+
 wind_df = load_df()
 
 # Creating Assets
@@ -297,4 +296,4 @@ multi_day = template_creation_multi_date(wind_df, date_to_analyse, 100)
 # single_day_line_graphs(hours, over_time, date_to_analyse)
 # scatter_graph(hours, multi_day)
 # histo_chart(hours, multi_day, date_to_analyse)
-multi_histo_chart(hours, multi_day)
+per_hour_histo_chart(multi_day, hours)
